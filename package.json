@@ -20,7 +20,7 @@
   "type": "module",
   "main": "./cjs/index.cjs",
   "module": "./esm/index.mjs",
-  "browser": "./umd/ecc_codec.min.js",
+  "browser": "./umd/index.min.js",
   "exports": {
     "import": "./esm/index.mjs",
     "require": "./cjs/index.cjs"
