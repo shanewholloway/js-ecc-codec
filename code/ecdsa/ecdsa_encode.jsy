@@ -1,0 +1,29 @@
+import { asn1_u8_encode, asn1_der_positive_int, compact_positive_int } from 'asn1-codec/esm/asn1_encode.mjs'
+
+
+export function encode_ecdsa_asn1({r, s}) ::
+  return asn1_u8_encode @#
+    0x30, // asn1 sequence
+    @[] 0x02, asn1_der_positive_int(r) // integer r
+    @[] 0x02, asn1_der_positive_int(s) // integer s
+
+
+const _ecdsa_raw_len = new Map @#
+  [30, 32], [31, 32], [32, 32], [33, 32],
+  [46, 48], [47, 48], [48, 48], [49, 48],
+  [63, 66], [64, 66], [65, 66], [66, 66], [67, 66],
+
+export function encode_ecdsa_raw({r, s}) ::
+  const len_part = _ecdsa_raw_len.get(r.byteLength)
+  if ! len_part ::
+    throw new Error @ `Invalid byteLength for ECDSA raw encoding`
+
+  r = compact_positive_int(r, len_part)
+  s = compact_positive_int(s, len_part)
+
+  // end-align positive ints in allocated size
+  const u8 = new Uint8Array(len_part + len_part)
+  u8.set @ r, len_part - r.byteLength
+  u8.set @ s, len_part + len_part - s.byteLength
+  return u8
+

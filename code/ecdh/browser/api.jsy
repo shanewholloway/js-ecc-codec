@@ -1,0 +1,28 @@
+const _ecc_curveForName = @{}
+  'P-256': 'P-256', 'prime256v1': 'P-256', 'secp256r1': 'P-256',
+  'P-384': 'P-384', 'secp384r1': 'P-384',
+  'P-521': 'P-521', 'secp521r1': 'P-521',
+
+export function ecdh_generateKey(namedCurve) ::
+  namedCurve = _ecc_curveForName[namedCurve]
+  return crypto.subtle.generateKey @
+    { name: 'ECDH', namedCurve },
+    true, ['deriveKey', 'deriveBits']
+
+export function ecdh_exportKey(format, ecdh_key) ::
+  return crypto.subtle.exportKey(format, ecdh_key)
+
+export function ecdh_importPublicKey(namedCurve, format, ecdh_key_info) ::
+  namedCurve = _ecc_curveForName[namedCurve]
+  return crypto.subtle.importKey @
+    format, ecdh_key_info,
+    { name: 'ECDH', namedCurve },
+    true, []
+
+export function ecdh_importPrivateKey(namedCurve, format, ecdh_key_info) ::
+  namedCurve = _ecc_curveForName[namedCurve]
+  return crypto.subtle.importKey @
+    format, ecdh_key_info,
+    { name: 'ECDH', namedCurve },
+    true, ['deriveKey', 'deriveBits']
+

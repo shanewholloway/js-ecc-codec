@@ -1,0 +1,74 @@
+import {ecdh_create_key} from './_base.jsy'
+import @{}
+  encode_ecc_public_raw
+
+  decode_ecc_public_spki
+  decode_ecc_public_raw
+  decode_ecc_jwk
+  decode_ecc_private_pkcs8
+from '../../ecc/index.jsy'
+
+
+const _ecdh_importPublicKey = @{}
+  'f spki': ecdh_importKey_spki
+  'f raw': ecdh_importKey_raw
+  'f jwk': ecdh_importKey_jwk
+  'f pkcs8': ecdh_importKey_pkcs8
+
+export function ecdh_importPublicKey(namedCurve, format, ecdh_key_info) ::
+  const fn = _ecdh_importPublicKey[`f ${format}`]
+  if ! fn ::
+    throw new Error @
+      `Format "${format}" not supported for publicKey import`
+
+  return fn(ecdh_key_info, namedCurve)
+
+
+const _ecdh_importPrivateKey = @{}
+  'f jwk': ecdh_importKey_jwk
+  'f pkcs8': ecdh_importKey_pkcs8
+
+export function ecdh_importPrivateKey(namedCurve, format, ecdh_key_info) ::
+  const fn = _ecdh_importPrivateKey[`f ${format}`]
+  if ! fn ::
+    throw new Error @
+      `Format "${format}" not supported for privateKey import`
+
+  return fn(ecdh_key_info, namedCurve)
+
+
+
+export function ecdh_importKey_spki(u8, namedCurve) ::
+  const res = decode_ecc_public_spki(u8)
+  return ecdh_importKey_public(res)
+
+export function ecdh_importKey_raw(u8, namedCurve) ::
+  const res = decode_ecc_public_raw(u8)
+  return ecdh_importKey_public(res)
+
+export function ecdh_importKey_jwk(jwk, namedCurve) ::
+  const res = decode_ecc_jwk(jwk)
+  return ecdh_importKey_binobj(res, namedCurve)
+
+export function ecdh_importKey_pkcs8(u8, namedCurve) ::
+  const res = decode_ecc_private_pkcs8(u8)
+  return ecdh_importKey_binobj(res, namedCurve)
+
+
+
+export function ecdh_importKey_binobj(ecc_obj, namedCurve) ::
+  return ecc_obj.d
+    ? ecdh_importKey_private(ecc_obj, namedCurve)
+    : ecdh_importKey_public(ecc_obj, namedCurve)
+
+export function ecdh_importKey_public({crv, curve, x, y}) ::
+  const u8_pubkey = encode_ecc_public_raw({x, y})
+  const ecdh_key = ecdh_create_key(crv || curve || namedCurve)
+  ecdh_key.setPublicKey(u8_pubkey)
+  return Promise.resolve @ ecdh_key
+
+export function ecdh_importKey_private({namedCurve, curve, crv, d}) ::
+  const ecdh_key = ecdh_create_key(crv || curve || namedCurve)
+  ecdh_key.setPrivateKey(d)
+  return Promise.resolve @ ecdh_key
+

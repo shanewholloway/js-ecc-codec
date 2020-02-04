@@ -1,0 +1,64 @@
+const { assert, expect } = require('chai')
+
+import * as ecc from 'ecc-codec/esm/web/ecc/index.js'
+import * as ecdh from 'ecc-codec/esm/web/ecdh/api.js'
+import { u8_to_hex, hex_to_u8 } from 'u8-utils/esm/web/index.js'
+
+const test_ecdh_format = @{}
+  jwk(jwk) ::
+    const res = ecc.decode_ecc_jwk(jwk)
+    const rt_jwk = ecc.encode_ecc_jwk(res)
+
+    assert.equal @ jwk.d, rt_jwk.d, 'JWK.d roundtrip mismatch'
+    assert.equal @ jwk.x, rt_jwk.x, 'JWK.x roundtrip mismatch'
+    assert.equal @ jwk.y, rt_jwk.y, 'JWK.y roundtrip mismatch'
+
+  pkcs8(ab) ::
+    const orig = u8_to_hex @ ab
+
+    const res = ecc.decode_ecc_private_pkcs8(ab)
+    const rt_u8 = ecc.encode_ecc_private_pkcs8(res)
+
+    const rt = u8_to_hex @ rt_u8
+
+    assert.equal @ rt, orig, 'PKCS8 roundtrip mismatch'
+
+  spki(ab) ::
+    const orig = u8_to_hex @ ab
+
+    const res = ecc.decode_ecc_public_spki(ab)
+    const rt_u8 = ecc.encode_ecc_public_spki(res)
+
+    const rt = u8_to_hex @ rt_u8
+    assert.equal @ rt, orig, 'SPKI roundtrip mismatch'
+
+  raw(ab) ::
+    const orig = u8_to_hex @ ab
+
+    const res = ecc.decode_ecc_public_raw(ab)
+    const rt_u8 = ecc.encode_ecc_public_raw(res)
+
+    const rt = u8_to_hex @ rt_u8
+    assert.equal @ rt, orig, 'RAW roundtrip mismatch'
+
+
+export const test_ecdh = test_ecdh_browser
+export async function test_ecdh_browser(keyKind, curve, format) ::
+  const ecdh_new_keys = await ecdh.ecdh_generateKey(curve)
+  const ecdh_key = ecdh_new_keys[keyKind]
+  const exp = await ecdh.ecdh_exportKey(format, ecdh_key)
+  test_ecdh_format[format] @ exp
+
+  //console.log @ JSON.stringify @: keyKind, curve, format, exported: exp
+
+
+export const validate_ecdh = validate_ecdh_browser
+export async function validate_ecdh_browser({keyKind, curve, format, exported}) ::
+  if 'string' === typeof exported ::
+    exported = hex_to_u8(exported).buffer
+
+  if 'publicKey' === keyKind ::
+    await ecdh.ecdh_importPublicKey(curve, format, exported)
+  else ::
+    await ecdh.ecdh_importPrivateKey(curve, format, exported)
+

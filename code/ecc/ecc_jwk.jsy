@@ -1,0 +1,50 @@
+import { u8_concat } from 'u8-utils/esm/buffer.js'
+#IF PLAT_NODEJS
+  import { base64_to_u8, u8_to_base64url } from 'u8-utils/esm/base64.js'
+
+#ELIF PLAT_WEB
+  import { base64_to_u8, u8_to_base64url } from 'u8-utils/esm/web/base64.js'
+
+
+export function decode_ecc_jwk(jwk) ::
+  return jwk.d 
+    ? decode_ecc_private_jwk(jwk)
+    : decode_ecc_public_jwk(jwk)
+
+
+export function decode_ecc_public_jwk({kty, crv, x, y}) ::
+  return @{} kty, crv, x: base64_to_u8(x), y: base64_to_u8(y)
+
+
+export function decode_ecc_private_jwk(jwk) ::
+  const res = decode_ecc_public_jwk(jwk)
+  res.d = base64_to_u8(jwk.d)
+  return res
+
+
+export function encode_ecc_jwk(ecc_obj) ::
+  return ecc_obj.d 
+    ? encode_ecc_private_jwk(ecc_obj)
+    : encode_ecc_public_jwk(ecc_obj)
+
+
+export function encode_ecc_public_jwk({namedCurve, curve, crv, x, y}) ::
+  return @{}
+    kty: 'EC'
+    crv: crv || curve || namedCurve
+    x: u8_to_base64url(x)
+    y: u8_to_base64url(y)
+
+
+const _ecc_d_len = {'P-256': 32, 'P-384': 48, 'P-521': 66}
+export function encode_ecc_private_jwk(ecc_obj) ::
+  const jwk = encode_ecc_public_jwk(ecc_obj)
+
+  let d = ecc_obj.d
+  const gap = _ecc_d_len[jwk.crv] - d.length
+  if gap :: // happens primarily with P-521
+    d = u8_concat @# new Uint8Array(gap), d
+
+  jwk.d = u8_to_base64url(d)
+  return jwk
+

@@ -1,0 +1,69 @@
+const { assert, expect } = require('chai')
+
+#IF PLAT_NODEJS
+  import { test_ecdh, validate_ecdh } from './_nodejs.jsy'
+
+#ELIF PLAT_WEB
+  import { test_ecdh, validate_ecdh } from './_browser.jsy'
+
+
+const chrome_instances = @[]
+  {"keyKind":"privateKey","curve":"P-256","format":"jwk","exported":{"crv":"P-256","d":"h7BsjjMyXNqWmfRR6luR4jrwLbTXIj2nPU3NuRSRupQ","ext":true,"key_ops":["deriveKey","deriveBits"],"kty":"EC","x":"zrR2jSISYGN52LaeV3HyJYqOo-I5BiwEwe3A3GB-sl8","y":"ZE7qO2FKvVtl9uH3Q_dbvxiKSUEdMDAxXNh1guqCCm0"}}
+  {"keyKind":"privateKey","curve":"P-256","format":"pkcs8","exported":"308187020100301306072a8648ce3d020106082a8648ce3d030107046d306b0201010420bad2ea8c55c14ba54523697e68c1976eff0a064790f2694542aca7a39bc2a7d4a14403420004691aeb8516d4f7333ba37bff296fb157b32e46b98485c059748874e3b00b1258085e4406c5b071aaa25bbbc71505745ae77cf76b5c792a634756e4c62f9e33f3"}
+  {"keyKind":"publicKey","curve":"P-256","format":"jwk","exported":{"crv":"P-256","ext":true,"key_ops":[],"kty":"EC","x":"EmH8xWn7uLy46pACwstQeIURhtEpEGqvFZ6SA2mehCA","y":"wiBfvkcHHHGwb4fPIJGosZx12WeKzZw7wSv5EEN5Xfg"}}
+  {"keyKind":"publicKey","curve":"P-256","format":"spki","exported":"3059301306072a8648ce3d020106082a8648ce3d03010703420004a7b0b0505d61fe4059c49663438b57d565964242b49247b785413df1b43a2dd6b8b6a074a968de63681277328cf2315ef16a53d08b6b049255e3c782c53be4fb"}
+  {"keyKind":"publicKey","curve":"P-256","format":"raw","exported":"0430fda50da5f52c3c8c51bb4b0015502e486a3c014a4d5934260c5302d43c22e706f9dd0ff16e0c9511827ad150815004a82fb9ace6bf982e6615b90b4c1c97ad"}
+
+  {"keyKind":"privateKey","curve":"P-384","format":"jwk","exported":{"crv":"P-384","d":"6W2VH1NT8Mo25jKh-tFNrh8DZKX2CHQtdYdDuxaQ1Au179t3fECGVnvIErCJ0fka","ext":true,"key_ops":["deriveKey","deriveBits"],"kty":"EC","x":"PonCsVD6mKBBKH76X3LE3hQQeQCqK4CdtocElhAjtA7L6s7wrq9PCDoCODx78zam","y":"4NM1-4U8t0UUUkbaxvx_QhVaOz920yWq2hsNixoOoCjxVJyDShDLMZaNZEJkYWnr"}}
+  {"keyKind":"privateKey","curve":"P-384","format":"pkcs8","exported":"3081b6020100301006072a8648ce3d020106052b8104002204819e30819b02010104300b3b1345f939d6abb920aeaea1a73c3bd4480926019d457ca0ad4614e27667fddd30e3327922cd03cb33aafd1f65fcbda16403620004fb5666b3665fefb20f6da846bf456428609bd599b7be8e6472080924ab6b2f848070624b5abdb358e320af8931683a892b682aa706b4f4887314f2b8aaef55f6db66c7e2abee624e37f41b9ddbd9300dddc2c64fc686261d2cc1d0a70b74934e"}
+  {"keyKind":"publicKey","curve":"P-384","format":"jwk","exported":{"crv":"P-384","ext":true,"key_ops":[],"kty":"EC","x":"VdEW3uvaoG-m3QcmQOn82kV9l70bTC33SVn6OCgclHpajFo0V_48jJEZxXBfUVzM","y":"vQCREe69w61JVV2t7spZmeNSKA46CrJnZD6AB-vwzhtQnXiyWikVluKCUe-o7rEN"}}
+  {"keyKind":"publicKey","curve":"P-384","format":"spki","exported":"3076301006072a8648ce3d020106052b810400220362000415738d9f421f06fdf9d754e740b436be930a201b4916796ba3a2a21e14816aecd5f4bb632a4399272586a1dddb7ab58ed4f2f0ddefc6d8e11b9ff41aede3b13030297872ae56898e055644233668e48e5c109d56a26f23e0c2be97b7847a5979"}
+  {"keyKind":"publicKey","curve":"P-384","format":"raw","exported":"0445c978ccc2a51fc3b6a31c06450f609257d7d4e49d617bc4cab3ad40e276156e79fb6080d2452b6039135fa667b164aba77a1d326e0411f5682cedfbd9e3911443497da63485813600dd3dcb3bc600c7f8d5bd813c50fac4b623dfc46ff74107"}
+
+  {"keyKind":"privateKey","curve":"P-521","format":"jwk","exported":{"crv":"P-521","d":"AVhkxSadtMQ6NnP0iAXRhjVcbzlbugaRQoQH8LQrzIC6H7Mkh-pYC7sUsXOgLrrjzW04RlW51OxzywJXjTDTZuw6","ext":true,"key_ops":["deriveKey","deriveBits"],"kty":"EC","x":"ADNCnm7c18_ng5Bvqu0zWXUpAmVhW8VkXsfbaqbkCPzhsWh6n05hiehTJL9QAxf1YivtadFghfBsLenu9b8tLyOa","y":"AGNDNyUzX_LC3irWizMDOlmUdFTkEOXRfu6ygL1nKU8MlQSB1c-fS5AM05GnNm5drjmI20t6fNPpQ4qHgKYT397G"}}
+  {"keyKind":"privateKey","curve":"P-521","format":"pkcs8","exported":"3081ee020100301006072a8648ce3d020106052b810400230481d63081d302010104420131f98ff0a16fb7dabd5d35cfa516632d2e3a7147a38d3acfe36919293c9a82acde856717220b7fc891eb5ae7b6cc52f952d4872b6ec41cf04d482399c6669ab53fa181890381860004008b61c27799ee81700d5021d7ed7545f22e729ba2e666691523804511e7b8624f9556c16ee42d2f35553e2cfcff681a150f8d63e1a35b006a440f7317fd004ad0ec003dff427bf3ee6f7733731e7bb0b98f61461efc8923fd7f523c7cedbd305016c3149e20059fd233695dd2bd8fdddb13925427161e0cf8c196835e435c196763237b"}
+  {"keyKind":"publicKey","curve":"P-521","format":"jwk","exported":{"crv":"P-521","ext":true,"key_ops":[],"kty":"EC","x":"ALjwd9QjCev9Ril_lUxJJ9sLQE8QropiRP3HAtluJNGOXuwyhIsPYt8zQITYWENUsCCQzK4nHbHcEn6HkXQHfnf0","y":"ADPFKyVbrh0kuu-wCQnXWMo25YlHPti2uzsXEfNX1uNSr2PIzQO_CvFM6s4sxluBSPpdMFfT1LFHchLEqvVxkntZ"}}
+  {"keyKind":"publicKey","curve":"P-521","format":"spki","exported":"30819b301006072a8648ce3d020106052b810400230381860004010439db4e46fe338e0099a51152ee3d5f05e64fd7f25b41306ca562dd1042719e838fb4e3156c6498aa94512ac558a0bfe9e2b709b8a82efab2c76cd5d1726a412200e43df011ef5a88888af45bef9dbfded1179a34c651dd232f507260397e7b1fc3c4b699df3a37e3512cbb8b1876fdf979914209c0ce776439d3a6119783b4282db2"}
+  {"keyKind":"publicKey","curve":"P-521","format":"raw","exported":"04006808ebd6a842a21f84d7cdfc38d4fc58ddccecbf3f96d1b8c19c9721968dd0b89f77552926834683abf8c7f7b8ab6c9b73983d0d054720b609e2c55e834211b60f0127478a5d9e349f2035f74e6d9456119d138ed3b420292f6f57141b3a5238af4978eca97999ff16fb98676444b30fe3a034a88a8647a595c030c1021304dbb65c39"}
+
+const nodejs_instances = @[]
+  {"keyKind":"privateKey","curve":"P-256","format":"jwk","exported":{"kty":"EC","crv":"P-256","d":"NFAqjInx82shPvHRWpbvwCfFsTxk90a5inqbcY16Kng","x":"ARZ6okZ_HAKrIJdUWDjE4NAJN_grbPz4-qTzKXXOhjQ","y":"JItfOAfUrxgT8T8brTQyXYPpGTI8efw2mhQk9P0mDHo"}}
+  {"keyKind":"privateKey","curve":"P-256","format":"pkcs8","exported":"308187020100301306072a8648ce3d020106082a8648ce3d030107046d306b020101042039f4c8d85020e20b0f7319ba73b7e5c4fb78a0f50406048455026b84d9410707a1440342000401b7e491debf2bb27bf05ca420de22d62d18e7ad0f2e46de8928fb751afd2c77e75311e08cc5181e83fe17223ecd47040adda5af31da9b0d4b4123de0f23a7d1"}
+  {"keyKind":"publicKey","curve":"P-256","format":"jwk","exported":{"kty":"EC","crv":"P-256","x":"NiMvwPBjTNxkcf0BQtfExCZJBJKdJL08oFPE6Gd-5F0","y":"NsP7IVEaZG80z3-1xoKPLXy45a6FXoIvtVnxoj3QL9o"}}
+  {"keyKind":"publicKey","curve":"P-256","format":"spki","exported":"3059301306072a8648ce3d020106082a8648ce3d0301070342000415e51f5fa20cadc1e9807984ec7e981e7bc57485212c3b86e5276214a3e68e3353ef6e4dc3b6ad8e747558d552ab05004a6f14423ed9060cc7f95f632775ad6c"}
+  {"keyKind":"publicKey","curve":"P-256","format":"raw","exported":"04da10672873fb74f89ddbd12825c966b75a7c8bf7f55d9f717b37f81252070332c9180341f9a3ace8e57cf8776a8fb1c976357d2b0a095791bc716c1e342efec2"}
+
+  {"keyKind":"privateKey","curve":"P-384","format":"jwk","exported":{"kty":"EC","crv":"P-384","d":"VRzlrx4KDO-woNcWWsww4Op3PyfCsbfS1Yx6s_1hSwMThIDDB2ej2paUHmja76GD","x":"vaPiAkqL5LDb7XEBXh0q3h0Mf4A4O-hOalXj9xagwvZAfE_eCpZSDVb1YkJ9jS91","y":"QPtP_sWD3hF7yWn1VwObQZrNHEmvbs67KMupNw2GYuAAACZpUrwtue8svKGaLP_Z"}}
+  {"keyKind":"privateKey","curve":"P-384","format":"pkcs8","exported":"3081b6020100301006072a8648ce3d020106052b8104002204819e30819b02010104304627a22c5268a1452b8da37c0ea6e05ef0ccac72e084b0dbf48134ac3fa07dcdad996d3194679030afb2a48509e9acefa1640362000493aad1d2f87cc61139604a763ef65df4f4eae2960ce70721ba61a95ea325188c0fb2229b4216ed2c7663e19710a3922253ad585bc2ec78ab6c7590a4664db87e671f8e460e12ce0669009d0d20560f688a801d33a85f7a8d85d60045ee6fe4e1"}
+  {"keyKind":"publicKey","curve":"P-384","format":"jwk","exported":{"kty":"EC","crv":"P-384","x":"UvR2i46YDaFPmgu1peXSD1F-lCObZBe1S9OKh5kR-u4Qwe_UU6K8fvas_GhuevFp","y":"lxoc_w_Qn0YgrPrKcK6APB0pgTriuKWm82Ne4Dsg0dzjWYrpyBpW3lvjjW0LsrkT"}}
+  {"keyKind":"publicKey","curve":"P-384","format":"spki","exported":"3076301006072a8648ce3d020106052b810400220362000404b0891a5ab5ece7456c328bf8eb628dcf14d617ef3f32051cf947295475e5df8f7826155ac9c3261a7951a949ce474d0599dd7bb36b9f2865bb6a4fb2002085e3f7df7cb11a5806c7c254b490c655c18e4af68fc5462b95af078bb70fc6c6f9"}
+  {"keyKind":"publicKey","curve":"P-384","format":"raw","exported":"040d139b57e97a427001cdd9bf39b330f0bb9c551f64eb2d5a387b2b5db19937084ca548716a606c286d08d540cac9307fc96bae20839ad540c90170e24b22fa076b4cf908088cdfd4cf4d982d6ec838352d175e97bd130cb5c3f8fe4aceed9ec1"}
+
+  {"keyKind":"privateKey","curve":"P-521","format":"jwk","exported":{"kty":"EC","crv":"P-521","d":"AI6ss1vG6veKtfUMvnU6DYBmoKfUXawbt85Av30Oltre05u9sBKbApTODAPjtjjc-vaEqmyENCtAW6gbYntsnqF3","x":"ARgbijF6VLiCxaebfLtR9Yi5JcZ9P44sSg9_pI36lHR9hbASYbHFwJJS783wD5JpbY4PugoRA2hQvSeiDwMa4EJ-","y":"AV-0P0ojRog2LISySkN2V3EsZjOItoBl5Rkmct1sNwTaf-SA6e8kqcy29m2ByuzMKYcwQirmJqVDmU7FEu0OV5AD"}}
+  {"keyKind":"privateKey","curve":"P-521","format":"pkcs8","exported":"3081ed020100301006072a8648ce3d020106052b810400230481d53081d2020101044182debde954f94d499c9eef377f66ebfa16c977cd4de5d3971237b747bc316d284a2b6b4942d2cc627dfe274d357ad50d311dad8ca9e145d5fe3b499a3541033298a18189038186000401ef4eed509fba176aa9512ce2d09bc5767d68baf9b80d397343c8657b5775a60651e576b56b3731113fd1a4a0b448aae6cdc5c58f0c836ccc72652b7c05c9d353500182399037b4ff395a43b0be3070609cc4b3ef722e2083d6ba09d660b5a7749819b9f4a75816ff8e5aac82b1546f865c3955e8ea55aba3af028fcaf6440184ea158b"}
+  {"keyKind":"publicKey","curve":"P-521","format":"jwk","exported":{"kty":"EC","crv":"P-521","x":"AKvW3_SBFHgDGeL9Lk3SOFiqRuisw5f9CLuGlRNYXnu2M8Q45JKsEXAedWRiqRYGlGMT43mTgvZGbP2aNDrhJbdl","y":"AOD23guhg2eJaI27e9zSrzqFALBg-jOPbMut7guXGFiAcQrNgkCJ4njMxMDZ4DhrID4nINLhg1_V7F7wg4rpJjNT"}}
+  {"keyKind":"publicKey","curve":"P-521","format":"spki","exported":"30819b301006072a8648ce3d020106052b81040023038186000401e4207648fa07b806ed8bb99517756aed12f28f0e9e9ca2add341a28ac0f6903807f0318a28a63a0447fc53c4db5f8602702afcf7a61aacc69c882c48fe29f8cf5701eaf27e61c056a58ff3de6ffb34a9657cfd8bdb1bff3a03101001705035d01f68a615ec19cc67af229718931e1805d82842e130583ea18217d5189a91286c3da745"}
+  {"keyKind":"publicKey","curve":"P-521","format":"raw","exported":"04012bad38cda7c56df7736947ae342591a6115cc64f9cbe0212390f81d3f931c3fcd007dbeebaf526bad8904f29f55ca95148423725e629ffd97369a00898cc8ff55201d28d9f1d7faf57d7c5e06b8a85051b761e4283ba2e85d0c7792536b0c37cda6e0394521f68e619e191b473634b78a0f7fa6f979c8f0fcda1510f8f1e954657eae5"}
+
+
+describe @ 'ecdh', @=> ::
+  describe @ 'generated', @=> ::
+    for const curve of ['P-256', 'P-384', 'P-521'] ::
+      for const format of ['jwk', 'pkcs8'] ::
+        it @ `ecdh privateKey ${curve} ${format}`, @=>>
+          test_ecdh @ 'privateKey', curve, format
+
+      for const format of ['jwk', 'spki', 'raw'] ::
+        it @ `ecdh publicKey ${curve} ${format}`, @=>>
+          test_ecdh @ 'publicKey', curve, format
+
+  describe @ 'Chrome-sourced instances', @=> ::
+    for const each of chrome_instances ::
+      it @ `ecdh ${each.keyKind} ${each.curve} ${each.format}`, @=>>
+        validate_ecdh @ each
+
+  describe @ 'NodeJS-sourced instances', @=> ::
+    for const each of nodejs_instances ::
+      it @ `ecdh ${each.keyKind} ${each.curve} ${each.format}`, @=>>
+        validate_ecdh @ each
+

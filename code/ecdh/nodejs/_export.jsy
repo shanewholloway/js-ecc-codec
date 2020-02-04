@@ -1,0 +1,57 @@
+import @{}
+  decode_ecc_public_raw
+
+  encode_ecc_public_spki
+  encode_ecc_jwk
+  encode_ecc_private_pkcs8
+from '../../ecc/index.jsy'
+
+
+const _ecdh_exportKey = @{}
+  'f raw': ecdh_exportKey_raw
+  'f spki': ecdh_exportKey_spki
+  'f jwk': ecdh_exportKey_jwk
+  'f pkcs8': ecdh_exportKey_pkcs8
+
+export async function ecdh_exportKey(format, ecdh_key) ::
+  const fn = _ecdh_exportKey[`f ${format}`]
+  if ! fn ::
+    throw new Error @
+      `Format "${format}" not supported for export`
+
+  return fn(ecdh_key)
+
+
+
+export function ecdh_exportKey_raw(ecdh_key) ::
+  return Promise.resolve @
+    new Uint8Array @ ecdh_key.getPublicKey()
+
+export function ecdh_exportKey_spki(ecdh_key) ::
+  return ecdh_exportKey_public(ecdh_key)
+    .then @ key => encode_ecc_public_spki(key)
+
+export function ecdh_exportKey_jwk(ecdh_key) ::
+  return ecdh_exportKey_private(ecdh_key, true)
+    .then @ key => encode_ecc_jwk(key)
+
+export function ecdh_exportKey_pkcs8(ecdh_key) ::
+  return ecdh_exportKey_private(ecdh_key, false)
+    .then @ key => encode_ecc_private_pkcs8(key)
+
+
+
+export function ecdh_exportKey_public(ecdh_key) ::
+  const u8_pubkey = new Uint8Array @ ecdh_key.getPublicKey()
+  return Promise.resolve @ decode_ecc_public_raw(u8_pubkey)
+
+export function ecdh_exportKey_private(ecdh_key, allowPublicOnly) ::
+  const u8_pubkey = new Uint8Array @ ecdh_key.getPublicKey()
+  const res = decode_ecc_public_raw(u8_pubkey)
+  try ::
+    res.d = new Uint8Array @ ecdh_key.getPrivateKey()
+  catch err ::
+    if ! allowPublicOnly ::
+      throw new Error @ 'Expected a private ECDH key'
+  return Promise.resolve @ res
+

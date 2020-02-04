@@ -1,0 +1,19 @@
+import { asn1_u8_decode } from 'asn1-codec/esm/asn1_decode.mjs'
+
+
+export function decode_ecdsa_asn1(ecdsa_asn1) ::
+  const [r_node, s_node] =
+    asn1_u8_decode(ecdsa_asn1)
+      .parse_parts()
+
+  return @{}
+    r: r_node.content
+    s: s_node.content
+
+
+export function decode_ecdsa_raw(ecdsa_raw) ::
+  const idx_s = ecdsa_raw.byteLength >>> 1
+  return @{}
+    r: ecdsa_raw.slice(0, idx_s)
+    s: ecdsa_raw.slice(idx_s)
+

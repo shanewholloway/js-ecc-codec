@@ -1,0 +1,81 @@
+import { asn1_u8_decode, asn1_u8 } from 'asn1-codec/esm/asn1_decode.mjs'
+
+
+export function decode_ecc_public_spki(u8) ::
+  u8 = asn1_u8(u8)
+
+  const [meta, body_pub] = asn1_u8_decode(u8).parse_parts()
+
+  const res = decode_ecc_meta(meta)
+  if 'EC' !== res.kty || undefined === res.crv ::
+    throw new Error @ 'Invalid EC SPKI encoding'
+
+  return decode_ecc_public_raw(body_pub.content, res)
+
+
+export function decode_ecc_private_pkcs8(u8) ::
+  u8 = asn1_u8(u8)
+
+  const [int0, meta, outer_body] = asn1_u8_decode(u8).parse_parts()
+  if 1 !== int0.content.byteLength || 0 !== int0.content[0] ::
+    throw new Error @ 'Invalid PKCS8 encoding'
+
+  const res = decode_ecc_meta(meta)
+  if 'EC' !== res.kty || undefined === res.crv ::
+    throw new Error @ 'Invalid EC PKCS8 encoding'
+
+  const [int1, body_d, inner_body] = outer_body.first_part()
+  if 1 !== int1.content.byteLength || 1 !== int1.content[0] ::
+    throw new Error @ 'Invalid PKCS8 body encoding'
+
+  res.d = body_d.content
+
+  const body_pub = asn1_u8_decode(inner_body.content)
+  return decode_ecc_public_raw(body_pub.content, res)
+
+
+const _crv_by_byteLen = new Map @#
+  [64, 'P-256'], [65, 'P-256'], [66, 'P-256'],
+  [96, 'P-384'], [97, 'P-384'], [98, 'P-384'],
+  [132, 'P-521'], [133, 'P-521'], [134, 'P-521'], [135, 'P-521'],
+
+export function decode_ecc_public_raw(u8, res) ::
+  u8 = asn1_u8(u8)
+
+  if undefined === res ::
+    if 4 !== u8[0] ::
+      throw new Error @ 'Invalid EC public key encoding'
+
+    u8 = u8.subarray(1)
+    res = @{}
+      kty: 'EC'
+      crv: _crv_by_byteLen.get(u8.length) || 'unknown'
+
+  else ::
+    if 0 !== u8[0] || 4 !== u8[1] ::
+      throw new Error @ 'Invalid EC embedded public key encoding'
+
+    u8 = u8.subarray(2)
+
+  const idx_y = u8.byteLength >> 1
+  res.x = u8.subarray(0, idx_y)
+  res.y = u8.subarray(idx_y)
+  return res
+
+
+const _pkcs8_oids = @{}
+  '42,134,72,206,61,2,1': @{} kty: 'EC'
+  '42,134,72,206,61,3,1,7': @{} crv: 'P-256'
+  '43,129,4,0,34': @{} crv: 'P-384'
+  '43,129,4,0,35': @{} crv: 'P-521'
+
+export function decode_ecc_meta(meta) ::
+  const res = {}
+  for const p of meta ::
+    if 6 === p.id ::
+      const attr = _pkcs8_oids[Array.from(p.content)]
+      if undefined === attr ::
+        throw new Error @ 'Unrecognized PKCS8 OID'
+      Object.assign @ res, attr
+  return res
+

@@ -1,0 +1,7 @@
+cjs/
+umd/
+esm/
+dist/
+package-lock.json
+yarn.lock
+test/__*.js

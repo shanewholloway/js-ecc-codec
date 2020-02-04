@@ -1,0 +1,6 @@
+(require('source-map-support') || {install(){}}).install()
+
+import './unit/smoke.jsy'
+import './unit/ecdh/test.jsy'
+import './unit/ecdsa/test.jsy'
+

@@ -1,0 +1,50 @@
+import { u8_concat } from 'u8-utils/esm/buffer.js'
+import { asn1_u8_encode } from 'asn1-codec/esm/asn1_encode.mjs'
+
+
+export function encode_ecc_public_spki(ecc_obj) ::
+  return asn1_u8_encode @#
+    0x30, // asn1 sequence
+    encode_ecc_meta(ecc_obj)
+    encode_ecc_public_raw(ecc_obj, true)
+
+
+export function encode_ecc_private_pkcs8(ecc_obj) ::
+  const u8_body = @[]
+    0x30, // asn1 sequence
+    @[] 0x02, new Uint8Array([1])
+    @[] 0x04, ecc_obj.d
+
+  if ecc_obj.x || ecc_obj.y ::
+    // custom composite
+    u8_body.push @# 0xa1, encode_ecc_public_raw(ecc_obj, true)
+
+  return asn1_u8_encode @#
+    0x30, // asn1 sequence
+    @[] 0x02, new Uint8Array([0]) // version=0
+    encode_ecc_meta(ecc_obj)
+    @[] 0x04, asn1_u8_encode(u8_body) // octect
+
+
+export function encode_ecc_public_raw({x, y}, embeded_format) ::
+  const leader = new Uint8Array @ embeded_format ? [0,4] : [4]
+  const pubkey_body = u8_concat @# leader, x, y
+  return embeded_format
+    ? [0x03, pubkey_body] // asn1 bitstring
+    : pubkey_body
+
+
+const _u8_oid_ecc = new Uint8Array @# 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x02, 0x01
+const _u8_oid_curves = @{}
+  'P-256': new Uint8Array @# 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07
+  'P-384': new Uint8Array @# 0x2b, 0x81, 0x04, 0x00, 0x22
+  'P-521': new Uint8Array @# 0x2b, 0x81, 0x04, 0x00, 0x23
+
+export function encode_ecc_meta({namedCurve, curve, crv}) ::
+  const u8_meta = @[]
+    0x30, // asn1 sequence
+    @[] 0x06, _u8_oid_ecc
+    @[] 0x06, _u8_oid_curves[crv || curve || namedCurve]
+
+  return asn1_u8_encode(u8_meta)
+

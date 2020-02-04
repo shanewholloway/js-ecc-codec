@@ -1,0 +1,68 @@
+const {assert, expect} = require('chai')
+
+import * as ecdsa from 'ecc-codec/esm/web/ecdsa/index.js'
+import { u8_to_hex, hex_to_u8 } from 'u8-utils/esm/web/index.js'
+
+export const test_ecdsa = test_ecdsa_browser
+export async function test_ecdsa_browser(curve, hash_alg, utf8_data) ::
+  const data = new TextEncoder().encode(utf8_data)
+
+  const ec_alg = @{} name: 'ECDSA', namedCurve: curve, hash: { name: hash_alg }
+
+  const {privateKey, publicKey} = await crypto.subtle.generateKey @
+    ec_alg, false, @[] 'sign', 'verify'
+
+  const sig_raw = new Uint8Array @
+    await crypto.subtle.sign @
+      ec_alg, privateKey, data
+
+  const sig_asn1 = ecdsa.encode_ecdsa_asn1 @
+    ecdsa.decode_ecdsa_raw @ sig_raw
+
+  return validate_ecdsa_browser @:
+    curve, hash_alg, utf8_data,
+    sig_raw, sig_asn1, publicKey
+
+
+export const validate_ecdsa = validate_ecdsa_browser
+export async function validate_ecdsa_browser({curve, hash_alg, utf8_data, sig_raw, sig_asn1, publicKey}) ::
+  const data = new TextEncoder().encode(utf8_data)
+  const ec_alg = @{} name: 'ECDSA', namedCurve: curve, hash: { name: hash_alg }
+
+  if 'string' === typeof sig_raw ::
+    sig_raw = hex_to_u8(sig_raw)
+
+  if 'string' === typeof sig_asn1 ::
+    sig_asn1 = hex_to_u8(sig_asn1)
+
+  if 'string' === typeof publicKey ::
+    publicKey = await crypto.subtle.importKey @
+      'raw', hex_to_u8(publicKey)
+      ec_alg, false, ['verify']
+
+  ::
+    const ver = await crypto.subtle.verify @
+      ec_alg, publicKey, sig_raw, data
+
+    assert.equal @ ver, true, 'verify direct'
+
+  ::
+    const sig_r_s = ecdsa.decode_ecdsa_raw @ sig_raw
+    const rt_sig = ecdsa.encode_ecdsa_raw @ sig_r_s
+
+    const ver = await crypto.subtle.verify @
+      ec_alg, publicKey, rt_sig, data
+
+    assert.equal @ ver, true, 'verify ECDSA raw roundtrip'
+    assert.equal @ u8_to_hex(rt_sig), u8_to_hex(sig_raw), 'ECDSA raw roundtrip'
+
+  ::
+    const rt_sig = ecdsa.encode_ecdsa_raw @
+      ecdsa.decode_ecdsa_asn1 @ sig_asn1
+
+    const ver = await crypto.subtle.verify @
+      ec_alg, publicKey, rt_sig, data
+
+    assert.equal @ ver, true, 'verify ECDSA ASN1 roundtrip'
+    assert.equal @ u8_to_hex(rt_sig), u8_to_hex(sig_raw), 'ECDSA ASN1 roundtrip'
+
