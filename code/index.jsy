@@ -1,5 +1,6 @@
 export * from './ecc/index.jsy'
+export * from './ecdsa/index.jsy'
 
 export * from './ecdh/api.jsy'
-//export * from './ecdsa/api.jsy'
+export * from './ecdsa/api.jsy'
 

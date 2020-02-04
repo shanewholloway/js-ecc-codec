@@ -9,9 +9,9 @@ const configs = []
 export default configs
 
 const sourcemap = true
-const external = []
+const external = ['crypto']
 
-const plugins = [ rpi_resolve() ]
+const plugins = [ rpi_resolve({preferBuiltins: true}) ]
 const plugins_nodejs = [
   rpi_jsy({defines: {PLAT_NODEJS: true}}),
   ... plugins ]
@@ -26,11 +26,13 @@ const plugins_min = [
 add_jsy('index', pkg_name)
 
 add_jsy('ecc/index')
+add_jsy('ecc/api')
 add_jsy('ecc/ecc_encode')
 add_jsy('ecc/ecc_decode')
 add_jsy('ecc/ecc_jwk')
 
 add_jsy('ecdsa/index')
+add_jsy('ecdsa/api')
 add_jsy('ecdsa/ecdsa_encode')
 add_jsy('ecdsa/ecdsa_decode')
 

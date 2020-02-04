@@ -45,13 +45,13 @@ export function ecdh_exportKey_public(ecdh_key) ::
   const u8_pubkey = new Uint8Array @ ecdh_key.getPublicKey()
   return Promise.resolve @ decode_ecc_public_raw(u8_pubkey)
 
-export function ecdh_exportKey_private(ecdh_key, allowPublicOnly) ::
+export function ecdh_exportKey_private(ecdh_key, allowPublic) ::
   const u8_pubkey = new Uint8Array @ ecdh_key.getPublicKey()
   const res = decode_ecc_public_raw(u8_pubkey)
   try ::
     res.d = new Uint8Array @ ecdh_key.getPrivateKey()
   catch err ::
-    if ! allowPublicOnly ::
+    if ! allowPublic ::
       throw new Error @ 'Expected a private ECDH key'
   return Promise.resolve @ res
 

@@ -1,0 +1,69 @@
+import @{}
+  decode_ecc_public_spki
+  decode_ecc_private_pkcs8
+
+  encode_ecc_public_raw
+  encode_ecc_public_spki
+  encode_ecc_jwk
+  encode_ecc_private_pkcs8
+from '../../ecc/index.jsy'
+
+
+const _ecc_exportKey = @{}
+  'f raw': ecc_exportKey_raw
+  'f spki': ecc_exportKey_spki
+  'f sec1': ecc_exportKey_sec1
+  'f jwk': ecc_exportKey_jwk
+  'f pkcs8': ecc_exportKey_pkcs8
+
+export async function ecc_exportKey(format, ecc_key) ::
+  const fn = _ecc_exportKey[`f ${format}`]
+  if ! fn ::
+    throw new Error @
+      `Format "${format}" not supported for export`
+
+  return fn(ecc_key)
+
+
+
+export function ecc_exportKey_raw(ecc_key) ::
+  return ecc_exportKey_public(ecc_key)
+    .then @ key => encode_ecc_public_raw(key)
+
+export function ecc_exportKey_spki(ecc_key) ::
+  return new Uint8Array @
+    ecc_key.export @: type: 'spki', format: 'der'
+
+export function ecc_exportKey_sec1(ecc_key) ::
+  return new Uint8Array @
+    ecc_key.export @: type: 'sec1', format: 'der'
+
+export function ecc_exportKey_jwk(ecc_key) ::
+  return ecc_exportKey_private(ecc_key, true)
+    .then @ key => encode_ecc_jwk(key)
+
+export function ecc_exportKey_pkcs8(ecc_key) ::
+  return ecc_exportKey_private(ecc_key, false)
+    .then @ key => encode_ecc_private_pkcs8(key)
+
+
+
+export function ecc_exportKey_public(ecc_key) ::
+  const u8_pubkey = new Uint8Array @
+    ecc_key.export @: type: 'spki', format: 'der'
+
+  return Promise.resolve @ decode_ecc_public_spki(u8_pubkey)
+
+export function ecc_exportKey_private(ecc_key, allowPublic) ::
+  let u8_privkey
+  try ::
+    u8_privkey = new Uint8Array @
+      ecc_key.export @: type: 'pkcs8', format: 'der'
+
+  catch err ::
+    if ! allowPublic ::
+      throw new Error @ 'Expected a private ECC key'
+    return ecc_exportKey_public(ecc_key)
+
+  return Promise.resolve @ decode_ecc_private_pkcs8(u8_privkey)
+

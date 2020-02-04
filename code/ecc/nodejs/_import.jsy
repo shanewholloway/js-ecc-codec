@@ -1,0 +1,82 @@
+import {createPrivateKey, createPublicKey} from 'crypto'
+
+import @{}
+  encode_ecc_public_spki
+  encode_ecc_private_pkcs8
+
+  decode_ecc_public_raw
+  decode_ecc_jwk
+from '../../ecc/index.jsy'
+
+
+const _ecc_importPublicKey = @{}
+  'f spki': ecc_importKey_spki
+  'f raw': ecc_importKey_raw
+  'f jwk': ecc_importKey_jwk
+
+export function ecc_importPublicKey(namedCurve, format, ecc_key_info) ::
+  const fn = _ecc_importPublicKey[`f ${format}`]
+  if ! fn ::
+    throw new Error @
+      `Format "${format}" not supported for publicKey import`
+
+  return fn(ecc_key_info, namedCurve)
+
+
+const _ecc_importPrivateKey = @{}
+  'f jwk': ecc_importKey_jwk
+  'f pkcs8': ecc_importKey_pkcs8
+  'f sec1': ecc_importKey_sec1
+
+export function ecc_importPrivateKey(namedCurve, format, ecc_key_info) ::
+  const fn = _ecc_importPrivateKey[`f ${format}`]
+  if ! fn ::
+    throw new Error @
+      `Format "${format}" not supported for privateKey import`
+
+  return fn(ecc_key_info, namedCurve)
+
+
+
+export function ecc_importKey_spki(u8, namedCurve) ::
+  return Promise.resolve @
+    createPublicKey @:
+      format: 'der', type: 'spki', key: u8
+
+export function ecc_importKey_raw(u8, namedCurve) ::
+  const res = decode_ecc_public_raw(u8)
+  return ecc_importKey_public(res)
+
+export function ecc_importKey_jwk(jwk, namedCurve) ::
+  const res = decode_ecc_jwk(jwk)
+  return ecc_importKey_binobj(res, namedCurve)
+
+export function ecc_importKey_pkcs8(u8, namedCurve) ::
+  return Promise.resolve @
+    createPrivateKey @:
+      format: 'der', type: 'pkcs8', key: u8
+
+export function ecc_importKey_sec1(u8, namedCurve) ::
+  return Promise.resolve @
+    createPrivateKey @:
+      format: 'der', type: 'sec1', key: u8
+
+
+
+export function ecc_importKey_binobj(ecc_obj, namedCurve) ::
+  return ecc_obj.d
+    ? ecc_importKey_private(ecc_obj, namedCurve)
+    : ecc_importKey_public(ecc_obj, namedCurve)
+
+export function ecc_importKey_public(ecc_obj) ::
+  return Promise.resolve @
+    createPublicKey @:
+      format: 'der', type: 'spki',
+      key: encode_ecc_public_spki(ecc_obj)
+  
+export function ecc_importKey_private(ecc_obj) ::
+  return Promise.resolve @
+    createPrivateKey @:
+      format: 'der', type: 'pkcs8',
+      key: encode_ecc_private_pkcs8(ecc_obj)
+
