@@ -41,7 +41,7 @@ export function ecc_importPrivateKey(namedCurve, format, ecc_key_info) ::
 export function ecc_importKey_spki(u8, namedCurve) ::
   return Promise.resolve @
     createPublicKey @:
-      format: 'der', type: 'spki', key: u8
+      format: 'der', type: 'spki', key: Buffer.from(u8)
 
 export function ecc_importKey_raw(u8, namedCurve) ::
   const res = decode_ecc_public_raw(u8)
@@ -54,12 +54,12 @@ export function ecc_importKey_jwk(jwk, namedCurve) ::
 export function ecc_importKey_pkcs8(u8, namedCurve) ::
   return Promise.resolve @
     createPrivateKey @:
-      format: 'der', type: 'pkcs8', key: u8
+      format: 'der', type: 'pkcs8', key: Buffer.from(u8)
 
 export function ecc_importKey_sec1(u8, namedCurve) ::
   return Promise.resolve @
     createPrivateKey @:
-      format: 'der', type: 'sec1', key: u8
+      format: 'der', type: 'sec1', key: Buffer.from(u8)
 
 
 
@@ -78,5 +78,5 @@ export function ecc_importKey_private(ecc_obj) ::
   return Promise.resolve @
     createPrivateKey @:
       format: 'der', type: 'pkcs8',
-      key: encode_ecc_private_pkcs8(ecc_obj)
+      key: Buffer.from @ encode_ecc_private_pkcs8(ecc_obj)
 

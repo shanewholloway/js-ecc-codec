@@ -1,4 +1,4 @@
-import {generateKeyPair, createECDH} from 'crypto'
+import {generateKeyPair} from 'crypto'
 import {ecc_importPublicKey, ecc_importPrivateKey} from './_import.jsy'
 import {ecc_exportKey} from './_export.jsy'
 
@@ -13,12 +13,6 @@ export const _ecc_curveForName = @{}
   'P-256': 'prime256v1', 'prime256v1': 'prime256v1', 'secp256r1': 'prime256v1',
   'P-384': 'secp384r1', 'secp384r1': 'secp384r1',
   'P-521': 'secp521r1', 'secp521r1': 'secp521r1',
-
-const _ecc_alg_generateKey = @{}
-  '': ecc_generateKey
-  'ECC': ecc_generateKey
-  'ECDH': ecdh_generateKey
-  'ECDSA': ecdsa_generateKey
 
 export @{}
   ecc_nodejs_api as default,
@@ -40,7 +34,7 @@ export function ecc_nodejs_api(ecc_alg, {namedCurve, extractable}) ::
       importPublicKey: ecc_key_info => importPublicKey(key_format, ecc_key_info)
       importPrivateKey: ecc_key_info => importPrivateKey(key_format, ecc_key_info)
 
-    generateKey: _ecc_alg_generateKey[ecc_alg.name].bind(null, namedCurve)
+    generateKey: ecc_generateKey.bind(null, namedCurve)
 
     exportKey(key_format, ecc_key) ::
       return ecc_exportKey(key_format, ecc_key.keyobj || ecc_key)
@@ -52,7 +46,7 @@ export function ecc_nodejs_api(ecc_alg, {namedCurve, extractable}) ::
       return ecc_importPrivateKey(namedCurve, key_format, ecc_key_info)
 
 
-export function ecc_generateKey(namedCurve) ::
+function _nodejs_ecc_generateKey(namedCurve) ::
   return new Promise @\ resolve, reject ::
     generateKeyPair @ 'ec', {namedCurve},
       @\ err, publicKey, privateKey ::
@@ -62,26 +56,9 @@ export function ecc_generateKey(namedCurve) ::
         privateKey.curve = namedCurve
         return resolve @: publicKey, privateKey
 
-export function ecdsa_generateKey(namedCurve) ::
-  return ecc_generateKey(namedCurve)
 
-export function ecdh_generateKey(namedCurve) ::
-  return new Promise @\ resolve, reject ::
-    generateKeyPair @ 'ec', {namedCurve},
-      @\ err, publicKey, privateKey ::
-        if err :: return reject(err)
-
-        const ecdh = @{}
-          publicKey: createECDH(namedCurve)
-          privateKey: createECDH(namedCurve)
-
-        ecdh.publicKey.setPublicKey(publicKey)
-        ecdh.publicKey.keyobj = publicKey
-        ecdh.publicKey.curve = namedCurve
-
-        ecdh.privateKey.setPrivateKey(privateKey)
-        ecdh.privateKey.keyobj = privateKey
-        ecdh.privateKey.curve = namedCurve
-
-        return resolve(ecdh)
+export function ecc_generateKey(namedCurve) ::
+  namedCurve = _ecc_curveForName[namedCurve]
+  if ! namedCurve :: throw new TypeError @ "Invalid namedCurve"
+  return _nodejs_ecc_generateKey(namedCurve)
 

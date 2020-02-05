@@ -1,15 +1,43 @@
-import {ecdh_create_key} from './_base.jsy'
-export * from './_import.jsy'
-export * from './_export.jsy'
+import {ecc_nodejs_api} from '../../ecc/nodejs/api.jsy'
 
-export function ecdh_generateKey(namedCurve) ::
-  const publicKey = ecdh_create_key(namedCurve)
-  const privateKey = ecdh_create_key(namedCurve)
+export @{}
+  ecdh_nodejs_api as default,
+  ecdh_nodejs_api as ecdh_api,
 
-  // Uncommon use for api uniformity
-  // Safe due to execution in same code block
-  publicKey.setPublicKey @
-    privateKey.generateKeys()
+export function ecdh_nodejs_api({namedCurve, extractable}) ::
+  const base_api = ecc_nodejs_api('ECDH', {namedCurve, extractable})
+  return @{} __proto__: base_api,
+    computeSecret(namedCurve, privateKey, publicKey, bits) ::
+      return _nodejs_ecdh_computeSecret @
+        privateKey, publicKey, bits
 
-  return Promise.resolve @: privateKey, publicKey
+
+function _nodejs_ecdh_computeSecret(namedCurve, privateKey, publicKey, bits) ::
+  return Promise.reject @ new Error @ "TODO"
+
+export function ecdh_computeSecret(namedCurve, privateKey, publicKey, bits) ::
+  return _nodejs_ecdh_computeSecret(namedCurve, privateKey, publicKey, bits)
+
+export function __ecdh_generateKey(namedCurve) ::
+  return new Promise @\ resolve, reject ::
+    generateKeyPair @ 'ec', {namedCurve},
+      @\ err, publicKey, privateKey ::
+        if err :: return reject(err)
+
+        const ecdh = @{}
+          publicKey: createECDH(namedCurve)
+          privateKey: createECDH(namedCurve)
+
+        privateKey.export @:
+          type: 'pkcs1', format: 'der'
+        ecdh.privateKey.setPrivateKey(privateKey)
+        ecdh.privateKey.keyobj = privateKey
+        ecdh.privateKey.curve = namedCurve
+
+        ecdh.publicKey.setPublicKey(publicKey)
+        ecdh.publicKey.keyobj = publicKey
+        ecdh.publicKey.curve = namedCurve
+
+        return resolve(ecdh)
+
 

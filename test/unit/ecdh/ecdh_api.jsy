@@ -1,8 +1,14 @@
 const { assert, expect } = require('chai')
 
-import * as ecc from 'ecc-codec/esm/web/ecc/index.js'
-import * as ecdh_api from 'ecc-codec/esm/web/ecdh/api.js'
 import { u8_to_hex, hex_to_u8 } from 'u8-utils/esm/web/index.js'
+
+#IF PLAT_NODEJS
+  import * as ecc from 'ecc-codec/esm/node/ecc/index.mjs'
+  import ecdh_api from 'ecc-codec/esm/node/ecdh/api.mjs'
+
+#ELIF PLAT_WEB
+  import * as ecc from 'ecc-codec/esm/web/ecc/index.js'
+  import ecdh_api from 'ecc-codec/esm/web/ecdh/api.js'
 
 const test_ecdh_format = @{}
   jwk(jwk) ::
@@ -44,21 +50,31 @@ const test_ecdh_format = @{}
 
 export const test_ecdh = test_ecdh_browser
 export async function test_ecdh_browser(keyKind, curve, format) ::
-  const ecdh_new_keys = await ecdh_api.ecdh_generateKey(curve)
+  const { generateKey, exportKey, computeSecret } =
+    ecdh_api @: namedCurve: curve, extractable: true
+
+  const ecdh_new_keys = await generateKey()
   const ecdh_key = ecdh_new_keys[keyKind]
-  const exp = await ecdh_api.ecdh_exportKey(format, ecdh_key)
+  const exp = await exportKey(format, ecdh_key)
   test_ecdh_format[format] @ exp
 
-  //console.log @ JSON.stringify @: keyKind, curve, format, exported: exp
-
+  if 0 ::
+    const {publicKey} = await generateKey()
+    const res = await computeSecret @ ecdh_new_keys.privateKey, publicKey
+    console.log @: res
 
 export const validate_ecdh = validate_ecdh_browser
 export async function validate_ecdh_browser({keyKind, curve, format, exported}) ::
+  const @{}
+    importPublicKey,
+    importPrivateKey
+  = ecdh_api @: namedCurve: curve
+
   if 'string' === typeof exported ::
     exported = hex_to_u8(exported).buffer
 
   if 'publicKey' === keyKind ::
-    await ecdh_api.ecdh_importPublicKey(curve, format, exported)
+    await importPublicKey(format, exported)
   else ::
-    await ecdh_api.ecdh_importPrivateKey(curve, format, exported)
+    await importPrivateKey(format, exported)
 

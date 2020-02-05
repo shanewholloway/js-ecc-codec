@@ -1,28 +1,28 @@
-const _ecc_curveForName = @{}
-  'P-256': 'P-256', 'prime256v1': 'P-256', 'secp256r1': 'P-256',
-  'P-384': 'P-384', 'secp384r1': 'P-384',
-  'P-521': 'P-521', 'secp521r1': 'P-521',
+import {ecc_browser_api, _ecc_curveForName} from '../../ecc/browser/api.jsy'
 
-export function ecdh_generateKey(namedCurve) ::
+export @{}
+  ecdh_browser_api as default,
+  ecdh_browser_api as ecdh_api,
+
+export function ecdh_browser_api({namedCurve, extractable}) ::
+  const base_api = ecc_browser_api('ECDH', {namedCurve, extractable})
+  namedCurve = base_api.namedCurve
+
+  return @{} __proto__: base_api,
+    computeSecret(privateKey, publicKey, bits) ::
+      return _web_ecdh_computeSecret @
+        namedCurve, privateKey, publicKey, bits
+
+
+function _web_ecdh_computeSecret(namedCurve, privateKey, publicKey, bits) ::
+  return Promise.reject @ new Error @ "TODO"
+  return crypto.subtle.deriveBits @
+    { name: 'ECDH', namedCurve, public: publicKey}
+    privateKey, bits
+
+
+export function ecdh_computeSecret(namedCurve, privateKey, publicKey, bits) ::
+  if !namedCurve :: namedCurve = privateKey.crv || privateKey.curve || privateKey.namedCurve
   namedCurve = _ecc_curveForName[namedCurve]
-  return crypto.subtle.generateKey @
-    { name: 'ECDH', namedCurve },
-    true, ['deriveKey', 'deriveBits']
-
-export function ecdh_exportKey(format, ecdh_key) ::
-  return crypto.subtle.exportKey(format, ecdh_key)
-
-export function ecdh_importPublicKey(namedCurve, format, ecdh_key_info) ::
-  namedCurve = _ecc_curveForName[namedCurve]
-  return crypto.subtle.importKey @
-    format, ecdh_key_info,
-    { name: 'ECDH', namedCurve },
-    true, []
-
-export function ecdh_importPrivateKey(namedCurve, format, ecdh_key_info) ::
-  namedCurve = _ecc_curveForName[namedCurve]
-  return crypto.subtle.importKey @
-    format, ecdh_key_info,
-    { name: 'ECDH', namedCurve },
-    true, ['deriveKey', 'deriveBits']
+  return _web_ecdh_computeSecret(namedCurve, privateKey, publicKey, bits)
 

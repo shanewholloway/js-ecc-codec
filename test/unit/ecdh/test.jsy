@@ -1,10 +1,6 @@
 const { assert, expect } = require('chai')
 
-#IF PLAT_NODEJS
-  import { test_ecdh, validate_ecdh } from './_nodejs.jsy'
-
-#ELIF PLAT_WEB
-  import { test_ecdh, validate_ecdh } from './_browser.jsy'
+import { test_ecdh, validate_ecdh } from './ecdh_api.jsy'
 
 
 const chrome_instances = @[]

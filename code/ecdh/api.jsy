@@ -1,6 +1,8 @@
 #IF PLAT_NODEJS
   export * from './nodejs/api.jsy'
+  export {default} from './nodejs/api.jsy'
 
 #ELIF PLAT_WEB
   export * from './browser/api.jsy'
+  export {default} from './browser/api.jsy'
 

@@ -1,0 +1,15 @@
+import {ecdh_create_key} from './_base.jsy'
+export * from './_import.jsy'
+export * from './_export.jsy'
+
+export function ecdh_generateKey(namedCurve) ::
+  const publicKey = ecdh_create_key(namedCurve)
+  const privateKey = ecdh_create_key(namedCurve)
+
+  // Uncommon use for api uniformity
+  // Safe due to execution in same code block
+  publicKey.setPublicKey @
+    privateKey.generateKeys()
+
+  return Promise.resolve @: privateKey, publicKey
+

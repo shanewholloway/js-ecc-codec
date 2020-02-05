@@ -1,9 +1,8 @@
 {
   "private": true,
   "dependencies": {
-    "ec-pem": "^0.18.0",
     "ecc-codec": "file:..",
-    "u8-utils": "^0.2.1"
+    "u8-utils": "^0.3.0"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^11.0.1",

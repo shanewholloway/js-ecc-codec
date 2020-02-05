@@ -32,7 +32,7 @@ add_jsy('ecc/index')
 add_jsy('ecc/api', {skip_generic: true})
 add_jsy('ecc/ecc_encode')
 add_jsy('ecc/ecc_decode')
-add_jsy('ecc/ecc_jwk')
+add_jsy('ecc/ecc_jwk', {skip_generic: true})
 
 add_jsy('ecdsa/index')
 add_jsy('ecdsa/api', {skip_generic: true})
