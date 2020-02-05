@@ -1,15 +1,21 @@
-const _ecc_algs = @{}
+export const _ecc_algs = @{}
   'ECDH': @{} name: 'ECDH', publicUse: [], privateUse: ['deriveKey', 'deriveBits']
   'ECDSA': @{} name: 'ECDSA', publicUse: ['verify'], privateUse: ['sign']
 
-const _ecc_curveForName = @{}
+export const _ecc_curveForName = @{}
   'P-256': 'P-256', 'prime256v1': 'P-256', 'secp256r1': 'P-256',
   'P-384': 'P-384', 'secp384r1': 'P-384',
   'P-521': 'P-521', 'secp521r1': 'P-521',
 
 
-export function ecc_api(ecc_alg, namedCurve, extractable) ::
+export @{}
+  ecc_browser_api as default,
+  ecc_browser_api as ecc_api,
+
+export function ecc_browser_api(ecc_alg, {namedCurve, extractable}) ::
   namedCurve = _ecc_curveForName[namedCurve]
+  if ! namedCurve :: throw new TypeError @ "Invalid namedCurve"
+
   ecc_alg = _ecc_algs[ecc_alg || '']
   extractable = !! extractable
 
@@ -17,25 +23,27 @@ export function ecc_api(ecc_alg, namedCurve, extractable) ::
     name: ecc_alg.name, namedCurve
 
   return @{}
-    withFormat(format) :: return @{}
-      exportKey: ecc_key => this.exportKey(format, ecc_key)
-      importPublicKey: ecc_key_info => importPublicKey(format, ecc_key_info)
-      importPrivateKey: ecc_key_info => importPrivateKey(format, ecc_key_info)
+    __proto__: null, namedCurve,
+
+    withKeyFormat(key_format) :: return @{}
+      exportKey: ecc_key => this.exportKey(key_format, ecc_key)
+      importPublicKey: ecc_key_info => importPublicKey(key_format, ecc_key_info)
+      importPrivateKey: ecc_key_info => importPrivateKey(key_format, ecc_key_info)
 
     generateKey() ::
       return crypto.subtle.generateKey @
         ecc_algorithm, extractable, [...ecc_alg.publicUse, ...ecc_alg.privateUse]
 
-    exportKey(format, ecc_key) ::
-      return crypto.subtle.exportKey(format, ecc_key)
+    exportKey(key_format, ecc_key) ::
+      return crypto.subtle.exportKey(key_format, ecc_key)
 
-    importPublicKey(format, ecc_key_info) ::
+    importPublicKey(key_format, ecc_key_info) ::
       return crypto.subtle.importKey @
-        format, ecc_key_info,
+        key_format, ecc_key_info,
         ecc_algorithm, extractable, ecc_alg.publicUse
 
-    importPrivateKey(format, ecc_key_info) ::
+    importPrivateKey(key_format, ecc_key_info) ::
       return crypto.subtle.importKey @
-        format, ecc_key_info,
+        key_format, ecc_key_info,
         ecc_algorithm, extractable, ecc_alg.privateUse
 

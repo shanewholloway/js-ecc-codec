@@ -1,5 +1,18 @@
 import { asn1_u8_decode } from 'asn1-codec/esm/asn1_decode.mjs'
 
+const _ecdsa_decodeFormat = @{}
+  'f asn1': decode_ecdsa_asn1
+  'f raw': decode_ecdsa_raw
+
+export default decode_ecdsa
+export function decode_ecdsa(sig_format, u8_signature) ::
+  const fn = _ecdsa_decodeFormat[`f ${sig_format}`]
+  if ! fn ::
+    throw new Error @
+      `Format "${format}" not supported for export`
+  return fn(u8_signature)
+
+
 
 export function decode_ecdsa_asn1(ecdsa_asn1) ::
   const [r_node, s_node] =

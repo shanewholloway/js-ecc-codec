@@ -1,4 +1,4 @@
-import { u8_concat } from 'u8-utils/esm/buffer.js'
+import { u8_concat } from 'u8-utils/esm/buffer.mjs'
 import { asn1_u8_encode } from 'asn1-codec/esm/asn1_encode.mjs'
 
 

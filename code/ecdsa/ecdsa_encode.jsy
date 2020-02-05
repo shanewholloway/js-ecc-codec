@@ -1,5 +1,17 @@
 import { asn1_u8_encode, asn1_der_positive_int, compact_positive_int } from 'asn1-codec/esm/asn1_encode.mjs'
 
+const _ecdsa_encodeFormat = @{}
+  'f asn1': encode_ecdsa_asn1
+  'f raw': encode_ecdsa_raw
+
+export default encode_ecdsa
+export function encode_ecdsa(sig_format, sig_obj) ::
+  const fn = _ecdsa_encodeFormat[`f ${sig_format}`]
+  if ! fn ::
+    throw new Error @
+      `Format "${format}" not supported for export`
+  return fn(sig_obj)
+
 
 export function encode_ecdsa_asn1({r, s}) ::
   return asn1_u8_encode @#

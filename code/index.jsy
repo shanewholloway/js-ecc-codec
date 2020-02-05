@@ -1,6 +1,11 @@
 export * from './ecc/index.jsy'
 export * from './ecdsa/index.jsy'
 
-export * from './ecdh/api.jsy'
-export * from './ecdsa/api.jsy'
+#IF PLAT_NODEJS
+  export * from './ecdh/api.jsy'
+  export * from './ecdsa/api.jsy'
+
+#ELIF PLAT_WEB
+  export * from './ecdh/api.jsy'
+  export * from './ecdsa/api.jsy'
 

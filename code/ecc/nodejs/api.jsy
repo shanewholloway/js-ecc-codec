@@ -1,68 +1,75 @@
 import {generateKeyPair, createECDH} from 'crypto'
-import * as ecc_import from './_import.jsy'
-import * as ecc_export from './_export.jsy'
+import {ecc_importPublicKey, ecc_importPrivateKey} from './_import.jsy'
+import {ecc_exportKey} from './_export.jsy'
 
 export * from './_import.jsy'
 export * from './_export.jsy'
 
-const _ecc_algs = @{}
+export const _ecc_algs = @{}
   'ECDH': @{} name: 'ECDH', publicUse: [], privateUse: ['deriveKey', 'deriveBits']
   'ECDSA': @{} name: 'ECDSA', publicUse: ['verify'], privateUse: ['sign']
 
-const _ecc_curveForName = @{}
+export const _ecc_curveForName = @{}
   'P-256': 'prime256v1', 'prime256v1': 'prime256v1', 'secp256r1': 'prime256v1',
   'P-384': 'secp384r1', 'secp384r1': 'secp384r1',
   'P-521': 'secp521r1', 'secp521r1': 'secp521r1',
 
+const _ecc_alg_generateKey = @{}
+  '': ecc_generateKey
+  'ECC': ecc_generateKey
+  'ECDH': ecdh_generateKey
+  'ECDSA': ecdsa_generateKey
 
-export function ecc_api(ecc_alg, namedCurve, extractable) ::
+export @{}
+  ecc_nodejs_api as default,
+  ecc_nodejs_api as ecc_api,
+
+export function ecc_nodejs_api(ecc_alg, {namedCurve, extractable}) ::
   namedCurve = _ecc_curveForName[namedCurve]
+  if ! namedCurve :: throw new TypeError @ "Invalid namedCurve"
+
   ecc_alg = _ecc_algs[ecc_alg || '']
   extractable = !! extractable
 
-  const ecc_algorithm = @{}
-    name: ecc_alg.name, namedCurve
-
+  const ecc_algorithm = @{} name: ecc_alg.name, namedCurve
   return @{}
-    withFormat(format) :: return @{}
-      exportKey: ecc_key => this.exportKey(format, ecc_key)
-      importPublicKey: ecc_key_info => importPublicKey(format, ecc_key_info)
-      importPrivateKey: ecc_key_info => importPrivateKey(format, ecc_key_info)
+    __proto__: null, namedCurve,
 
-    generateKey: @
-        'ECDH' === ecc_alg.name ? ecdh_generateKey.bind(null, namedCurve)
-      : 'ECDSA' === ecc_alg.name ? ecdsa_generateKey.bind(null, namedCurve)
-      : ecc_generateKey.bind(null, namedCurve)
+    withKeyFormat(key_format) :: return @{}
+      exportKey: ecc_key => this.exportKey(key_format, ecc_key)
+      importPublicKey: ecc_key_info => importPublicKey(key_format, ecc_key_info)
+      importPrivateKey: ecc_key_info => importPrivateKey(key_format, ecc_key_info)
 
-    exportKey(format, ecc_key) ::
-      return ecc_exportKey(format, ecc_key.keyobj || ecc_key)
+    generateKey: _ecc_alg_generateKey[ecc_alg.name].bind(null, namedCurve)
 
-    importPublicKey(format, ecc_key_info) ::
-      return ecc_importPublicKey(namedCurve, format, ecc_key_info)
+    exportKey(key_format, ecc_key) ::
+      return ecc_exportKey(key_format, ecc_key.keyobj || ecc_key)
 
-    importPrivateKey(format, ecc_key_info) ::
-      return ecc_importPrivateKey(namedCurve, format, ecc_key_info)
+    importPublicKey(key_format, ecc_key_info) ::
+      return ecc_importPublicKey(namedCurve, key_format, ecc_key_info)
+
+    importPrivateKey(key_format, ecc_key_info) ::
+      return ecc_importPrivateKey(namedCurve, key_format, ecc_key_info)
 
 
 export function ecc_generateKey(namedCurve) ::
   return new Promise @\ resolve, reject ::
     generateKeyPair @ 'ec', {namedCurve},
       @\ err, publicKey, privateKey ::
-        if undefined !== err ::
-          return reject(err)
+        if err :: return reject(err)
 
         publicKey.curve = namedCurve
         privateKey.curve = namedCurve
         return resolve @: publicKey, privateKey
 
-export const ecdsa_generateKey = ecc_generateKey
+export function ecdsa_generateKey(namedCurve) ::
+  return ecc_generateKey(namedCurve)
 
 export function ecdh_generateKey(namedCurve) ::
   return new Promise @\ resolve, reject ::
     generateKeyPair @ 'ec', {namedCurve},
       @\ err, publicKey, privateKey ::
-        if undefined !== err ::
-          return reject(err)
+        if err :: return reject(err)
 
         const ecdh = @{}
           publicKey: createECDH(namedCurve)

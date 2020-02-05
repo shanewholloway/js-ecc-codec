@@ -1,2 +1,61 @@
+import {createSign, createVerify} from 'crypto'
+import {ecc_nodejs_api} from '../../ecc/nodejs/api.jsy'
+import transcode_ecdsa from '../index.jsy'
 
+const _sig_formats = @{} '': 'asn1', 'raw': 'raw', 'asn1': 'asn1', 'asn': 'asn1'
+const _sig_hashForName = @{} '': 'SHA256',
+  'SHA256': 'SHA256', 'SHA-256': 'SHA256', 'sha256': 'SHA256', 'sha-256': 'SHA256',
+  'SHA384': 'SHA384', 'SHA-384': 'SHA384', 'sha384': 'SHA384', 'sha-384': 'SHA384',
+  'SHA512': 'SHA512', 'SHA-512': 'SHA512', 'sha512': 'SHA512', 'sha-512': 'SHA512',
+
+const _as_hash_alg = hash_alg =>
+  ''+_sig_hashForName[hash_alg ? hash_alg.name || hash_alg : '']
+
+export @{}
+  ecdsa_nodejs_api as default,
+  ecdsa_nodejs_api as ecdsa_api,
+
+export function ecdsa_nodejs_api({namedCurve, hash_alg, signature_format}) ::
+  const base_api = ecc_nodejs_api('ECDSA', {namedCurve})
+  namedCurve = base_api.namedCurve
+  base_api.withHash = withHash
+  return withHash(hash_alg, signature_format)
+
+  function withHash(hash_alg, def_sig_format) ::
+    return @{}
+      __proto__: base_api,
+
+      sign(privateKey, data, sig_format) ::
+        return _nodejs_ecdsa_sign @
+          hash_alg, sig_format || def_sig_format, privateKey, data
+
+      verify(publicKey, signature, data, sig_format) ::
+        return _nodejs_ecdsa_verify @
+          hash_alg, sig_format || def_sig_format, publicKey, signature, data
+
+
+function _nodejs_ecdsa_sign(hash_alg, sig_format, privateKey, data) ::
+  hash_alg = _as_hash_alg(hash_alg)
+  sig_format = _sig_formats[sig_format || '']
+
+  const h = createSign(hash_alg); h.update(data); h.end()
+  const u8_asn1sig = new Uint8Array @ h.sign(privateKey)
+  return Promise.resolve @
+    transcode_ecdsa('asn1', sig_format, u8_asn1sig)
+
+function _nodejs_ecdsa_verify(hash_alg, sig_format, publicKey, signature, data) ::
+  hash_alg = _as_hash_alg(hash_alg)
+  sig_format = _sig_formats[sig_format || '']
+
+  const u8_asn1sig = transcode_ecdsa(sig_format, 'asn1', signature)
+  const h = createVerify(hash_alg); h.update(data); h.end()
+  return Promise.resolve @
+    h.verify(publicKey, u8_asn1sig)
+
+
+export function ecdsa_sign(namedCurve, hash_alg, sig_format, privateKey, data) ::
+  return _nodejs_ecdsa_sign(hash_alg, sig_format, privateKey, data)
+
+export function ecdsa_verify(namedCurve, hash_alg, sig_format, publicKey, signature, data) ::
+  return _nodejs_ecdsa_verify(hash_alg, sig_format, publicKey, signature, data)
 

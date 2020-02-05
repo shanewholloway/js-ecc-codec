@@ -1,56 +1,66 @@
-const _ecc_curveForName = @{}
-  'P-256': 'P-256', 'prime256v1': 'P-256', 'secp256r1': 'P-256',
-  'P-384': 'P-384', 'secp384r1': 'P-384',
-  'P-521': 'P-521', 'secp521r1': 'P-521',
+import {ecc_browser_api, _ecc_curveForName} from '../../ecc/browser/api.jsy'
+import transcode_ecdsa from '../index.jsy'
 
-export function ecdsa_generateKey(namedCurve) ::
-  namedCurve = _ecc_curveForName[namedCurve]
-  return crypto.subtle.generateKey @
-    { name: 'ECDSA', namedCurve },
-    true, ['sign', 'verify']
-
-export function ecdsa_exportKey(format, ecdsa_key) ::
-  return crypto.subtle.exportKey(format, ecdsa_key)
-
-export function ecdsa_importPublicKey(namedCurve, format, ecdsa_key_info) ::
-  namedCurve = _ecc_curveForName[namedCurve]
-  return crypto.subtle.importKey @
-    format, ecdsa_key_info,
-    { name: 'ECDSA', namedCurve },
-    true, ['verify']
-
-export function ecdsa_importPrivateKey(namedCurve, format, ecdsa_key_info) ::
-  namedCurve = _ecc_curveForName[namedCurve]
-  return crypto.subtle.importKey @
-    format, ecdsa_key_info,
-    { name: 'ECDSA', namedCurve },
-    true, ['sign']
-
-
+const _sig_formats = @{} '': 'asn1', 'raw': 'raw', 'asn1': 'asn1', 'asn': 'asn1'
 const _sig_hashForName = @{} '': 'SHA256',
   'SHA256': 'SHA-256', 'SHA-256': 'SHA-256', 'sha256': 'SHA-256', 'sha-256': 'SHA-256',
   'SHA384': 'SHA-384', 'SHA-384': 'SHA-384', 'sha384': 'SHA-384', 'sha-384': 'SHA-384',
   'SHA512': 'SHA-512', 'SHA-512': 'SHA-512', 'sha512': 'SHA-512', 'sha-512': 'SHA-512',
 
-export function ecdsa_signer(namedCurve, hash) ::
-  hash = @{} name: ''+_sig_hashForName[hash.name || hash || '']
+const _as_hash_alg = hash_alg =>
+  ''+_sig_hashForName[hash_alg ? hash_alg.name || hash_alg : '']
 
-  return (ecdsa_privateKey, data) => ::
-    if !namedCurve :: namedCurve = ecdsa_privateKey.crv || ecdsa_privateKey.curve || ecdsa_privateKey.namedCurve
-    namedCurve = _ecc_curveForName[namedCurve]
+export @{}
+  ecdsa_browser_api as default,
+  ecdsa_browser_api as ecdsa_api,
 
-    return crypto.subtle.sign @
-      { name: 'ECDSA', namedCurve, hash },
-      ecdsa_privateKey, data
+export function ecdsa_browser_api({namedCurve, hash_alg, signature_format, extractable}) ::
+  const base_api = ecc_browser_api('ECDSA', {namedCurve, extractable})
+  namedCurve = base_api.namedCurve
+  base_api.withHash = withHash
+  return withHash(hash_alg, signature_format)
 
-export function ecdsa_verifer(namedCurve, hash) ::
-  hash = @{} name: ''+_sig_hashForName[hash.name || hash || '']
+  function withHash(hash_alg, def_sig_format) ::
+    return @{}
+      __proto__: base_api,
 
-  return (ecdsa_publicKey, signature, data) => ::
-    if !namedCurve :: namedCurve = ecdsa_publicKey.crv || ecdsa_publicKey.curve || ecdsa_publicKey.namedCurve
-    namedCurve = _ecc_curveForName[namedCurve]
+      sign(privateKey, data, sig_format) ::
+        return _web_ecdsa_sign @
+          namedCurve, hash_alg, sig_format || def_sig_format, privateKey, data
 
-    return crypto.subtle.verify @
-      { name: 'ECDSA', namedCurve, hash },
-      ecdsa_publicKey, signature, data,
+      verify(publicKey, signature, data, sig_format) ::
+        return _web_ecdsa_verify @
+          namedCurve, hash_alg, sig_format || def_sig_format, publicKey, signature, data
+
+
+async function _web_ecdsa_sign(namedCurve, hash_alg, sig_format, privateKey, data) ::
+  hash_alg = _as_hash_alg(hash_alg)
+  sig_format = _sig_formats[sig_format || '']
+
+  const u8_rawsig = new Uint8Array @
+    await crypto.subtle.sign @
+      { name: 'ECDSA', namedCurve, hash: {name: hash_alg} },
+      privateKey, data
+
+  return transcode_ecdsa('raw', sig_format, u8_rawsig)
+
+function _web_ecdsa_verify(namedCurve, hash_alg, sig_format, publicKey, signature, data) ::
+  hash_alg = _as_hash_alg(hash_alg)
+  sig_format = _sig_formats[sig_format || '']
+
+  const u8_rawsig = transcode_ecdsa(sig_format, 'raw', signature)
+  return crypto.subtle.verify @
+    { name: 'ECDSA', namedCurve, hash: {name: hash_alg} },
+    publicKey, u8_rawsig, data,
+
+
+export function ecdsa_sign(namedCurve, sig_format, hash_alg, privateKey, data) ::
+  if !namedCurve :: namedCurve = privateKey.crv || privateKey.curve || privateKey.namedCurve
+  namedCurve = _ecc_curveForName[namedCurve]
+  return _web_ecdsa_sign(namedCurve, sig_format, hash_alg, privateKey, data)
+
+export function ecdsa_verify(namedCurve, sig_format, hash_alg, publicKey, signature, data) ::
+  if !namedCurve :: namedCurve = publicKey.crv || publicKey.curve || publicKey.namedCurve
+  namedCurve = _ecc_curveForName[namedCurve]
+  return _web_ecdsa_verify(namedCurve, sig_format, hash_alg, publicKey, signature, data)
 

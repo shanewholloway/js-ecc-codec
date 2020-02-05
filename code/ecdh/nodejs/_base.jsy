@@ -1,4 +1,4 @@
-const {createECDH: _createECDH} = require('crypto')
+import {createECDH} from 'crypto'
 const _ecc_curveForName = @{}
   'P-256': 'prime256v1', 'prime256v1': 'prime256v1', 'secp256r1': 'prime256v1',
   'P-384': 'secp384r1', 'secp384r1': 'secp384r1',
@@ -6,7 +6,7 @@ const _ecc_curveForName = @{}
 
 export function ecdh_create_key(namedCurve) ::
   namedCurve = _ecc_curveForName[namedCurve]
-  const ec = _createECDH(namedCurve)
+  const ec = createECDH(namedCurve)
   ec.curve = namedCurve
   return ec
 

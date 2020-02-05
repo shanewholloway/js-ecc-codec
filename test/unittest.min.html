@@ -15,6 +15,7 @@
 <div id="mocha"></div>
 
 <script>
+  window.crypto$1=window.crypto
   window.require = module => window[module] || window[module.replace('-', '_')]
   mocha.setup({ ui: 'bdd' })
 </script>

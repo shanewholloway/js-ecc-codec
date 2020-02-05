@@ -1,0 +1,84 @@
+const {assert, expect} = require('chai')
+
+import * as ecdsa from 'ecc-codec/esm/ecdsa/index.mjs'
+import { u8_to_hex, hex_to_u8 } from 'u8-utils/esm/index.mjs'
+
+#IF PLAT_NODEJS
+  import ecdsa_api from 'ecc-codec/esm/node/ecdsa/api.mjs'
+
+#ELIF PLAT_WEB
+  import ecdsa_api from 'ecc-codec/esm/web/ecdsa/api.js'
+
+
+export async function test_ecdsa(curve, hash_alg, utf8_data) ::
+  const {sign, verify, generateKey} = await ecdsa_api @: namedCurve: curve, hash_alg
+  const {privateKey, publicKey} = await generateKey()
+
+  const data = new TextEncoder().encode(utf8_data)
+
+  ::
+    const sig_a = await sign(privateKey, data)
+    const sig_raw_b = ecdsa.encode_ecdsa_raw @
+      ecdsa.decode_ecdsa_asn1(sig_a)
+
+    return validate_ecdsa @:
+      curve, hash_alg, utf8_data,
+      sig_raw: sig_raw_b, sig_asn1: sig_a, publicKey
+
+  ::
+    const sig_raw_a = await sign(privateKey, data, 'raw')
+    const sig_asn_b = ecdsa.encode_ecdsa_asn1 @
+      ecdsa.decode_ecdsa_raw(sig_raw_a)
+
+    return validate_ecdsa @:
+      curve, hash_alg, utf8_data,
+      sig_raw: sig_raw_a, sig_asn1: sig_asn_b, publicKey
+
+  ::
+    const sig_asn_a = await sign(privateKey, data, 'asn1')
+    const sig_raw_b = ecdsa.encode_ecdsa_raw @
+      ecdsa.decode_ecdsa_asn1(sig_asn_a)
+
+    return validate_ecdsa @:
+      curve, hash_alg, utf8_data,
+      sig_raw: sig_raw_b, sig_asn1: sig_asn_a, publicKey
+
+
+export async function validate_ecdsa({curve, hash_alg, utf8_data, sig_raw, sig_asn1, publicKey}) ::
+  const {verify, importPublicKey} = await ecdsa_api @: namedCurve: curve, hash_alg
+
+  const data = new TextEncoder().encode(utf8_data)
+
+  if 'string' === typeof sig_raw ::
+    sig_raw = hex_to_u8(sig_raw)
+
+  if 'string' === typeof sig_asn1 ::
+    sig_asn1 = hex_to_u8(sig_asn1)
+
+  if 'string' === typeof publicKey ::
+    publicKey = await importPublicKey @ 'raw', hex_to_u8(publicKey)
+
+  ::
+    const ver = await verify(publicKey, sig_raw, data, 'raw')
+    assert.equal @ ver, true, 'verify raw direct'
+
+  ::
+    const ver = await verify(publicKey, sig_asn1, data, 'asn1')
+    assert.equal @ ver, true, 'verify asn1 direct'
+
+  ::
+    const sig_r_s = ecdsa.decode_ecdsa_raw @ sig_raw
+    const rt_sig = ecdsa.encode_ecdsa_raw @ sig_r_s
+
+    const ver = await verify(publicKey, rt_sig, data, 'raw')
+    assert.equal @ ver, true, 'verify ECDSA raw roundtrip'
+    assert.equal @ u8_to_hex(rt_sig), u8_to_hex(sig_raw), 'ECDSA raw roundtrip'
+
+  ::
+    const rt_sig = ecdsa.encode_ecdsa_raw @
+      ecdsa.decode_ecdsa_asn1 @ sig_asn1
+
+    const ver = await verify(publicKey, rt_sig, data, 'raw')
+    assert.equal @ ver, true, 'verify ECDSA ASN1 roundtrip'
+    assert.equal @ u8_to_hex(rt_sig), u8_to_hex(sig_raw), 'ECDSA ASN1 roundtrip'
+

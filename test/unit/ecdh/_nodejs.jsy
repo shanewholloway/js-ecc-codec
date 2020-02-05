@@ -1,8 +1,8 @@
 const { createECDH } = require('crypto')
 const { assert, expect } = require('chai')
 
-import * as ecc from 'ecc-codec/esm/ecc/index.mjs'
-import * as ecdh from 'ecc-codec/esm/ecdh/api.mjs'
+import * as ecc from 'ecc-codec/esm/node/ecc/index.mjs'
+import * as ecdh from 'ecc-codec/esm/node/ecdh/api.mjs'
 import { hex_to_u8 } from 'u8-utils/esm/index.js'
 
 export const test_ecdh = test_ecdh_nodejs

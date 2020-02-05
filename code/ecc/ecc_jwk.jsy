@@ -1,6 +1,7 @@
-import { u8_concat } from 'u8-utils/esm/buffer.js'
+import { u8_concat } from 'u8-utils/esm/buffer.mjs'
+
 #IF PLAT_NODEJS
-  import { base64_to_u8, u8_to_base64url } from 'u8-utils/esm/base64.js'
+  import { base64_to_u8, u8_to_base64url } from 'u8-utils/esm/node/base64.mjs'
 
 #ELIF PLAT_WEB
   import { base64_to_u8, u8_to_base64url } from 'u8-utils/esm/web/base64.js'

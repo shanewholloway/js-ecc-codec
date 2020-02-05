@@ -1,2 +1,13 @@
 export * from './ecdsa_encode.jsy'
 export * from './ecdsa_decode.jsy'
+
+import encode_ecdsa from './ecdsa_encode.jsy'
+import decode_ecdsa from './ecdsa_decode.jsy'
+
+export default transcode_ecdsa
+export function transcode_ecdsa(sig_src_format, sig_dst_format, u8_signature) ::
+  if sig_src_format === sig_dst_format ::
+    return u8_signature
+  const sig_obj = decode_ecdsa(sig_src_format, u8_signature)
+  return encode_ecdsa(sig_dst_format, sig_obj)
+
