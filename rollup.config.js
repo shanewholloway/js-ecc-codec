@@ -1,6 +1,6 @@
 import rpi_resolve from '@rollup/plugin-node-resolve'
 import { terser as rpi_terser } from 'rollup-plugin-terser'
-import rpi_jsy from 'rollup-plugin-jsy-lite'
+import rpi_jsy from 'rollup-plugin-jsy'
 
 import pkg from './package.json'
 const pkg_name = pkg.name.replace('-', '_')

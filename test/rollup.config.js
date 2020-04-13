@@ -1,5 +1,5 @@
 import rpi_resolve from '@rollup/plugin-node-resolve'
-import rpi_jsy from 'rollup-plugin-jsy-lite'
+import rpi_jsy from 'rollup-plugin-jsy'
 
 const sourcemap = 'inline'
 const external_nodejs = ['crypto']
