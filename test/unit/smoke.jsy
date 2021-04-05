@@ -18,8 +18,6 @@ import @{}
 from 'ecc-codec/esm/index.mjs'
 
 
-const umd_or_module = require('ecc-codec')
-
 describe @ 'smoke', @::
   it @ 'esm basic', @::
     assert.equal @ 'function', typeof encode_ecc_public_spki
@@ -36,20 +34,4 @@ describe @ 'smoke', @::
     assert.equal @ 'function', typeof decode_ecc_jwk
     assert.equal @ 'function', typeof decode_ecc_public_jwk
     assert.equal @ 'function', typeof decode_ecc_private_jwk
-
-  it @ 'commonjs / web', @::
-    assert.equal @ 'function', typeof umd_or_module.encode_ecc_public_spki
-    assert.equal @ 'function', typeof umd_or_module.encode_ecc_public_raw
-    assert.equal @ 'function', typeof umd_or_module.encode_ecc_private_pkcs8
-
-    assert.equal @ 'function', typeof umd_or_module.decode_ecc_public_spki
-    assert.equal @ 'function', typeof umd_or_module.decode_ecc_public_raw
-    assert.equal @ 'function', typeof umd_or_module.decode_ecc_private_pkcs8
-
-    assert.equal @ 'function', typeof umd_or_module.encode_ecc_jwk
-    assert.equal @ 'function', typeof umd_or_module.encode_ecc_public_jwk
-    assert.equal @ 'function', typeof umd_or_module.encode_ecc_private_jwk
-    assert.equal @ 'function', typeof umd_or_module.decode_ecc_jwk
-    assert.equal @ 'function', typeof umd_or_module.decode_ecc_public_jwk
-    assert.equal @ 'function', typeof umd_or_module.decode_ecc_private_jwk
 
