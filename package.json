@@ -26,7 +26,7 @@
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^11.2.1",
     "asn1-codec": "^0.6.0",
-    "rollup": "^2.44.0",
+    "rollup": "^3.29.5",
     "rollup-plugin-jsy": "^1.7.2",
     "rollup-plugin-terser": "^7.0.2",
     "u8-utils": "^0.3.7"
